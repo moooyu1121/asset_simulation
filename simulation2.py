@@ -9,7 +9,7 @@ simulations = 10000
 
 initial_age = 25
 end_age = 90
-monthly_withdrawal = 200000
+monthly_withdrawal = 300000
 target_final_asset = 10000000
 confidence_level = 0.95
 
@@ -21,7 +21,7 @@ volatility_monthly = volatility_annual / np.sqrt(12)
 max_work_years = end_age - initial_age
 
 # シナリオ：年金支給と現金モード付き
-def simulate_retirement_with_pension(work_years, simulations=10000):
+def simulate_retirement_with_pension(work_years, simulations):
     total_months = (end_age - initial_age) * 12
     work_months = work_years * 12
     pension_start_month = (70 - initial_age) * 12
