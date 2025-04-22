@@ -1,9 +1,24 @@
-# パラメータ再設定
+import numpy as np
+import matplotlib.pyplot as plt
+
+# パラメータ設定
+monthly_investment = 100000  # 毎月の積立額（円）
+years = 30
+months = years * 12
+mean_return_annual = 0.0678
+volatility_annual = 0.2081
+simulations = 10000
+
 initial_age = 25
 end_age = 90
 monthly_withdrawal = 200000
 target_final_asset = 10_000_000
 confidence_level = 0.95
+
+
+# 月次に変換
+mean_return_monthly = (1 + mean_return_annual) ** (1/12) - 1
+volatility_monthly = volatility_annual / np.sqrt(12)
 
 # 年数変数
 max_work_years = end_age - initial_age
