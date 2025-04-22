@@ -48,7 +48,8 @@ def simulate_retirement(work_years, simulations=10000):
 # 最小の労働年数を探す
 required_work_years = None
 for work_years in range(1, max_work_years + 1):
-    prob = simulate_retirement(work_years)
+    print(f"シミュレーション中: {work_years} 年")
+    prob = simulate_retirement(work_years, simulations)
     if prob >= confidence_level:
         required_work_years = work_years
         break
