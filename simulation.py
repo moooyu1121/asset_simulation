@@ -10,7 +10,7 @@ years = 30
 months = years * 12
 mean_return_annual = 0.0678
 volatility_annual = 0.2081
-simulations = 1000
+simulations = 10000
 
 initial_age = 25
 end_age = 90

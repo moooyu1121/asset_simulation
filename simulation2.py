@@ -2,7 +2,7 @@ import numpy as np
 
 # 基本設定
 monthly_investment = 150000  # 毎月の積立額（円）
-initial_asset = 5000000  # 初期資産（円）
+initial_asset = 50000000  # 初期資産（円）
 mean_return_annual = 0.0678
 volatility_annual = 0.2081
 simulations = 10000
@@ -10,6 +10,7 @@ simulations = 10000
 initial_age = 25
 end_age = 90
 monthly_withdrawal = 300000
+monthly_pension_from_70 = 300000
 target_final_asset = 10000000
 confidence_level = 0.95
 
@@ -40,7 +41,7 @@ def simulate_retirement_with_pension(work_years, simulations):
             else:
                 withdrawal = monthly_withdrawal
                 if m >= pension_start_month:
-                    withdrawal -= 200000 
+                    withdrawal -= monthly_pension_from_70
                 withdrawal = max(withdrawal, 0)
 
                 if not cash_mode and value >= (withdrawal * (total_months - m)):
@@ -64,7 +65,7 @@ def simulate_retirement_with_pension(work_years, simulations):
 def find_min_work_years_with_pension(min_years, max_years):
     while min_years < max_years:
         mid = (min_years + max_years) // 2
-        prob = simulate_retirement_with_pension(mid)
+        prob = simulate_retirement_with_pension(mid, simulations)
         if prob >= confidence_level:
             max_years = mid
         else:
@@ -87,11 +88,13 @@ def simulate_retirement_path_with_pension(work_years, simulations=1000):
     pension_start_month = (70 - initial_age) * 12
 
     results = np.zeros((simulations, total_months))
+    cash_switch_ages = []  # ← 追加：現金モードに切り替えた年齢
 
     for i in range(simulations):
-        value = 5_000_000
+        value = initial_asset
         cash_mode = False
         path = []
+        switch_age = None
 
         for m in range(total_months):
             monthly_return = np.random.normal(mean_return_monthly, volatility_monthly)
@@ -102,11 +105,12 @@ def simulate_retirement_path_with_pension(work_years, simulations=1000):
             else:
                 withdrawal = monthly_withdrawal
                 if m >= pension_start_month:
-                    withdrawal -= 200000
+                    withdrawal -= monthly_pension_from_70
                 withdrawal = max(withdrawal, 0)
 
                 if not cash_mode and value >= (withdrawal * (total_months - m)):
                     cash_mode = True
+                    switch_age = initial_age + m // 12  # ← 年齢として記録
 
                 value -= withdrawal if value > 0 else 0
                 value = max(value, 0)
@@ -114,29 +118,30 @@ def simulate_retirement_path_with_pension(work_years, simulations=1000):
             path.append(value)
 
         results[i] = path
+        cash_switch_ages.append(switch_age if switch_age is not None else np.nan)
 
-    return results
+    return results, cash_switch_ages
 
-# グラフ用のシミュレーション（1000回程度）
-path_results = simulate_retirement_path_with_pension(min_work_years_with_pension, simulations=1000)
+# 実行
+path_results, cash_switch_ages = simulate_retirement_path_with_pension(min_work_years_with_pension, simulations=simulations)
 
-# パーセンタイル計算
+# パーセンタイル計算と年齢軸
 median = np.percentile(path_results, 50, axis=0)
-p5 = np.percentile(path_results, 5, axis=0)
+p_low_num = int((1-confidence_level)*100)
+p_low = np.percentile(path_results, p_low_num, axis=0)
 p95 = np.percentile(path_results, 95, axis=0)
 
-# 年齢ベースのx軸ラベル作成
 months = np.arange(path_results.shape[1])
 ages = initial_age + months // 12
-xticks_idx = np.arange(0, len(ages), 12 * 5)  # 5年ごとに表示
+xticks_idx = np.arange(0, len(ages), 12 * 5)
 
 # グラフ描画
 plt.figure(figsize=(12, 6))
 plt.plot(median, label='Median', color='black')
-plt.plot(p5, label='5th Percentile', linestyle='--', color='red')
+plt.plot(p_low, label=str(p_low_num)+'th Percentile', linestyle='--', color='red')
 plt.plot(p95, label='95th Percentile', linestyle='--', color='green')
-plt.yscale('log')  # 対数スケールで成長を可視化
-plt.xticks(ticks=xticks_idx, labels=ages[xticks_idx])  # 年齢をX軸に
+plt.yscale('log')
+plt.xticks(ticks=xticks_idx, labels=ages[xticks_idx])
 plt.title(f'Retirement Portfolio Projection (Retire at Age {retirement_age_with_pension})')
 plt.xlabel('Age')
 plt.ylabel('Portfolio Value (JPY, log scale)')
@@ -144,4 +149,14 @@ plt.legend()
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.savefig('retirement_projection_logscale_age.png')
-print("📊 グラフ 'retirement_projection_logscale_age.png' を保存しました（対数スケール＆年齢軸）。")
+print("📊 グラフ 'retirement_projection_logscale_age.png' を保存しました。")
+
+# 現金モードへの切替年齢の統計情報
+cash_switch_ages = np.array(cash_switch_ages)
+valid_switch_ages = cash_switch_ages[~np.isnan(cash_switch_ages)]
+
+print("\n💬 現金モードに切り替えた年齢の統計:")
+print(f"  平均年齢: {np.mean(valid_switch_ages):.2f} 歳")
+print(f"  中央年齢: {np.median(valid_switch_ages):.2f} 歳")
+print(f"  最小年齢: {np.min(valid_switch_ages):.0f} 歳")
+print(f"  最大年齢: {np.max(valid_switch_ages):.0f} 歳")
