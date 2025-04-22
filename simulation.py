@@ -1,0 +1,44 @@
+# パラメータ再設定
+initial_age = 25
+end_age = 90
+monthly_withdrawal = 200000
+target_final_asset = 10_000_000
+confidence_level = 0.95
+
+# 年数変数
+max_work_years = end_age - initial_age
+
+# モンテカルロシミュレーション関数定義
+def simulate_retirement(work_years, simulations=10000):
+    total_months = (end_age - initial_age) * 12
+    work_months = work_years * 12
+    withdraw_months = total_months - work_months
+
+    results = np.zeros(simulations)
+    for i in range(simulations):
+        value = 5_000_000  # initial asset
+        for m in range(work_months):
+            monthly_return = np.random.normal(mean_return_monthly, volatility_monthly)
+            value = value * (1 + monthly_return) + monthly_investment
+        for m in range(withdraw_months):
+            monthly_return = np.random.normal(mean_return_monthly, volatility_monthly)
+            value = value * (1 + monthly_return) - monthly_withdrawal
+            if value <= 0:
+                value = 0
+                break
+        results[i] = value
+    prob_above_target = np.mean(results >= target_final_asset)
+    return prob_above_target
+
+# 最小の労働年数を探す
+required_work_years = None
+for work_years in range(1, max_work_years + 1):
+    prob = simulate_retirement(work_years)
+    if prob >= confidence_level:
+        required_work_years = work_years
+        break
+
+required_work_years, initial_age + required_work_years
+
+print(f"必要な労働年数: {required_work_years} 年")
+print(f"退職年齢: {initial_age + required_work_years} 歳") 
