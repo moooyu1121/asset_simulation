@@ -2,16 +2,16 @@ import numpy as np
 
 # 基本設定
 monthly_investment = 150000  # 毎月の積立額（円）
-initial_asset = 50000000  # 初期資産（円）
+initial_asset = 10000000  # 初期資産（円）
 mean_return_annual = 0.0678
 volatility_annual = 0.2081
 simulations = 10000
 
 initial_age = 25
 end_age = 90
-monthly_withdrawal = 300000
-monthly_pension_from_70 = 300000
-target_final_asset = 10000000
+monthly_withdrawal = 200000
+monthly_pension_from_70 = 200000
+target_final_asset = 20000000
 confidence_level = 0.95
 
 # 月次リターンに変換
